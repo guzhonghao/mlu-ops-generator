@@ -138,6 +138,7 @@ message Node {
   extensions 3000 to 4000;
 
   optional DivParam    div_param                      = 4001;   // param
+  optional GenerateProposalsV2Param generate_proposals_v2_param = 5930;   // GenerateProposalsV2Param
   optional LogParam    log_param                      = 4002;     // param
   optional SqrtParam   sqrt_param                     = 4003;  // param
   optional PsRoiPoolForwardParam psroipool_forward_param = 4004; //param
@@ -224,6 +225,17 @@ message SqrtParam {
 message DivParam {
   optional ComputationPreference prefer = 1 [default = COMPUTATION_HIGH_PRECISION];
 }
+
+// param to call mluOpGenerateProposalsV2()
+message GenerateProposalsV2Param {
+  required int32 pre_nms_top_n = 1 [default = 6000];
+  required int32 post_nms_top_n = 2 [default = 2000];
+  required float nms_thresh = 3 [default = 0.5];
+  required float min_size = 4 [default = 0.1];
+  required float eta = 5 [default = 1.0];
+  required bool pixel_offset = 6 [default = true];
+}
+
 
 // param to call mluOpPsRoiPoolForward()
 message PsRoiPoolForwardParam{
