@@ -34,8 +34,8 @@ def genSingleCase(dtype='float32', params_list=[1,1,1,1,1,1,1,1,1]):
     img_shape = [N, 2]
 
     rois_shape = [pre_nms_top_n, 4]
-    rpn_roi_probs_shape = [1, 4]
-    rpn_rois_num_shape = [N]
+    rpn_roi_probs_shape = [pre_nms_top_n, 1]
+    rpn_rois_num_shape = [N, 1]
     rpn_rois_batch_size_shape = [1]
 
     bottom_limit = 10
@@ -50,8 +50,9 @@ def genSingleCase(dtype='float32', params_list=[1,1,1,1,1,1,1,1,1]):
     
 
     outputs = '       "outputs":[\n'
-    rois_output = '            {' + dShape(rois_shape) + ',' + dType('int32') + ',' + dlayout("ARRAY") + '},\n'
-    rpn_roi_probs_output = '            {' + dShape(rpn_roi_probs_shape) + ',' + dType('int32') + ',' + dlayout("ARRAY") + '},\n'
+    rois_output = '            {' + dShape(rois_shape) + ',' + dType(dtype) + ',' + dlayout("ARRAY") + '},\n'
+    rpn_roi_probs_output = '            {' + dShape(rpn_roi_probs_shape) + ',' + dType(dtype) + ',' + dlayout("ARRAY") + '},\n'
+    
     rrpn_rois_num_output = '            {' + dShape(rpn_rois_num_shape) + ',' + dType('int32') + ',' + dlayout("ARRAY") + '},\n'
     rpn_rois_batch_size_output = '            {' + dShape(rpn_rois_batch_size_shape) + ',' + dType('int32') + ',' + dlayout("ARRAY") + '}\n'
 
