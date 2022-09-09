@@ -32,9 +32,9 @@ class PolyNmsOp(OpTest):
         np_img_size =  self.tensor_list_.getInputTensor(4).getData()
 
         N = np_scores.shape[0]
-        A = np_scores.shape[1]
-        H = np_scores.shape[2]
-        W = np_scores.shape[3]
+        H = np_scores.shape[1]
+        W = np_scores.shape[2]
+        A = np_scores.shape[3]
 
         print('N:', N)
         print('A:', A)
@@ -87,31 +87,15 @@ class PolyNmsOp(OpTest):
         #                 np_bboox_deltas[n][3 + 4 * a][h][w] = random.uniform(mid, up) 
 
 
-        # # input is 【N，A，H，W】        
-        # np_scores = np.arange(0,N*A*H*W).reshape(N, A, H ,W)
-        # self.tensor_list_.getInputTensor(0).setData(np_scores)
-
-        # np_bboox_deltas = np.arange(0,4*N*A*H*W).reshape(N, 4 * A, H ,W) #[n, a4,h,w]
-        # self.tensor_list_.getInputTensor(1).setData(np_bboox_deltas)
-
-        # np_anchors = np_anchors.transpose(1, 2, 0, 3) # ahw4-> hwa4
-        # np_variances = np_variances.transpose(1, 2, 0, 3) # ahw4-> hwa4
-        # self.tensor_list_.getInputTensor(2).setData(np_anchors)
-        # self.tensor_list_.getInputTensor(3).setData(np_variances)
-
-        # input is 【N，A,H，W】        
-        np_scores = np.arange(0,N*A*H*W).reshape(N, A,H ,W)
+        # input is 【N，H，W, A】        
+        # np_scores = np.arange(0,N*A*H*W).reshape(N, H ,W, A)
+        np_scores=np_scores.transpose(0,3,1,2) # NHWA-->NAHW
         self.tensor_list_.getInputTensor(0).setData(np_scores)
 
-        np_bboox_deltas = np.arange(0,4*N*A*H*W).reshape(N, 4, A, H ,W)
-        np_bboox_deltas = np_bboox_deltas.transpose(0,2,1,3,4)
-        np_bboox_deltas =np_bboox_deltas.reshape(N, A*4, H ,W)
+        np_bboox_deltas = np_bboox_deltas.reshape(N, H ,W, A, 4) #[NHW4A]-->NA4HW
+        np_bboox_deltas = np_bboox_deltas.transpose(0,3,4,1,2)
+        np_bboox_deltas = np_bboox_deltas.reshape(N, A*4, H ,W)
         self.tensor_list_.getInputTensor(1).setData(np_bboox_deltas)
-
-        np_anchors = np_anchors.transpose(2,3,1,0) # 4ahw->hwa4
-        np_variances = np_variances.transpose(2,3,1,0) # 4ahw->hwa4
-        self.tensor_list_.getInputTensor(2).setData(np_anchors)
-        self.tensor_list_.getInputTensor(3).setData(np_variances)
 
         np_rpn_rois = self.tensor_list_.getOutputTensor(0)
         np_rpn_roi_probs = self.tensor_list_.getOutputTensor(1)
@@ -164,31 +148,19 @@ class PolyNmsOp(OpTest):
             np_rpn_rois_batch_size.setDiff(diff1=10.0, diff2=10.0, diff3=0)
 
             print("rpn_rois_batch_size", rpn_rois_batch_size_tmp)
-            # # input is 【N，A,H，W】  
-            # np_bboox_deltas=np_bboox_deltas.transpose(0, 2, 3, 1) # [N,A4,H,W] ==》 [N,H,W,A4]
-            # t1=np_bboox_deltas.reshape(N, 1,H*W*A,4) # [N.H.W.A4]=>[]N,1,HWA,4]
-            # np_bboox_deltas=t1.transpose(0,3,1,2) # [N,1,HWA,4] => [N,4,1,HWA]
-            # self.tensor_list_.getInputTensor(1).setData(np_bboox_deltas)
-
-            # np_scores.transpose(0,2,3,1)  # [N,A,H,W] ==> [N,H,W,A]
-            # self.tensor_list_.getInputTensor(0).setData(np_scores)
-
-            # np_anchors = np_anchors.transpose(3,0,1,2) # [H,W,A,4] ==> [4,H,W, A]
-            # np_variances = np_variances.transpose(3,0,1,2) # [H,W,A,4] ==> [4,H,W,A]
-            # self.tensor_list_.getInputTensor(2).setData(np_anchors)
-            # self.tensor_list_.getInputTensor(3).setData(np_variances)
-
-
             # input is 【N，H，W，A】  
-            np_bboox_deltas =np_bboox_deltas.reshape(N, A, 4, H ,W)
-            np_bboox_deltas = np_bboox_deltas.transpose(0,2,1,3,4)
-            np_bboox_deltas =np_bboox_deltas.reshape(N, 4*A, H ,W)
+            np_scores=np_scores.transpose(0,2,3,1)  # [N,A,H,W] ==> [N,H,W,A]
+            self.tensor_list_.getInputTensor(0).setData(np_scores)
+
+            np_bboox_deltas=np_bboox_deltas.reshape(N, A, 4, H ,W)
+            np_bboox_deltas=np_bboox_deltas.transpose(0,3,4,1,2)
+            np_bboox_deltas=np_bboox_deltas.reshape(N, H ,W,A*4)
             self.tensor_list_.getInputTensor(1).setData(np_bboox_deltas)
 
-            np_anchors = np_anchors.transpose(3,2,0,1) # [H,W,A,4] ==> [4,A,H,W]
-            np_variances = np_variances.transpose(3,2,0,1) # [H,W,A,4] ==> [4,a,H,W]
-            self.tensor_list_.getInputTensor(2).setData(np_anchors)
-            self.tensor_list_.getInputTensor(3).setData(np_variances)
+            # np_anchors = np_anchors.transpose(3,2,0,1) # [H,W,A,4] ==> [4,A,H,W]
+            # np_variances = np_variances.transpose(3,2,0,1) # [H,W,A,4] ==> [4,a,H,W]
+            # self.tensor_list_.getInputTensor(2).setData(np_anchors)
+            # self.tensor_list_.getInputTensor(3).setData(np_variances)
             print('1 trans shape 0 : ', np_anchors.shape[0])
             print('1 trans shape 1 : ', np_anchors.shape[1])
             print('1 trans shape 2 : ', np_anchors.shape[2])

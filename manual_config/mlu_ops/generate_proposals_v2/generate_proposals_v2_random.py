@@ -20,33 +20,34 @@ def genSingleCase(dtype='float32', params_list=[1,1,1,1,1,1,1,1,1]):
     H = params_list[2]
     W = params_list[3]
 
-    post_nms_top_n = params_list[4]
-    pre_nms_top_n = params_list[5]
+    pre_nms_top_n = int(params_list[4])
+    post_nms_top_n = int(params_list[5])
     nms_thresh = params_list[6]
     min_size = params_list[7]
     eta = params_list[8]
     pixel_offset = params_list[9]
 
-    scores_shape = [N, A, H, W]
-    deltas_shape = [N, 4 * A, H, W]
-    anchors_shape = [A, H, W, 4]
-    variances_shape = [A, H, W, 4]
+    scores_shape = [N, H, W, A]
+    deltas_shape = [N, H, W, A * 4]
+    anchors_shape = [H, W, A, 4]
+    variances_shape = [H, W, A, 4]
     img_shape = [N, 2]
 
-    rois_shape = [pre_nms_top_n, 4]
-    rpn_roi_probs_shape = [pre_nms_top_n, 1]
+    rois_shape = [post_nms_top_n, 4]
+    rpn_roi_probs_shape = [post_nms_top_n, 1]
     rpn_rois_num_shape = [N, 1]
     rpn_rois_batch_size_shape = [1]
 
     bottom_limit = 10
     up_limit = 100
+    mid = bottom_limit + 0.5 * (up_limit-bottom_limit)
 
     inputs = '    {\n       "inputs":[\n'
     scores_input = '            {' + dShape(scores_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(bottom_limit,up_limit) + "," + dlayout("ARRAY") + '},\n'
     deltas_input = '            {' + dShape(deltas_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(bottom_limit,up_limit) + "," + dlayout("ARRAY") + '},\n'
     anchors_input = '            {' + dShape(anchors_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(bottom_limit,up_limit) + "," + dlayout("ARRAY") + '},\n'
     variances_input = '            {' + dShape(variances_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(bottom_limit,up_limit) + "," + dlayout("ARRAY") + '},\n'
-    img_input = '            {' + dShape(img_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(bottom_limit,up_limit) + "," + dlayout("ARRAY") + '}\n'
+    img_input = '            {' + dShape(img_shape) + ',' + dType(dtype) + ',' + dRandomDistribution(mid,up_limit) + "," + dlayout("ARRAY") + '}\n'
     
 
     outputs = '       "outputs":[\n'
@@ -77,85 +78,95 @@ def genSingleCase(dtype='float32', params_list=[1,1,1,1,1,1,1,1,1]):
 def genCase():
     cur_res = '    "manual_data":[\n'
 
-    random = 1
+    random = 0
     if random == 1:
-        N = np.random.randint(1,5)
+        N = np.random.randint(1,2)
         A = np.random.randint(1,50)
         H = np.random.randint(1,50)
         W = np.random.randint(1,50)
 
-        post_nms_top_n = np.random.randint(1,20000)
-        pre_nms_top_n = np.random.randint(1,2000)
+        dn = min(A*H*W/3, 2000)
+        up = max(A*H*W, 2000)
+        pre_nms_top_n = up
+        post_nms_top_n = dn
+
         nms_thresh = np.random.randint(1,100)/100
         min_size = np.random.randint(1,50)/100
         eta = 1.0
         pixel_offset = np.random.randint(0,10) > 5
 
-        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offse]
         cur_res += genSingleCase(params_list=param)
 
-        for i in range(80):
+        for i in range(20):
             N = 1
-            A = np.random.randint(1,50)
-            H = np.random.randint(1,50)
-            W = np.random.randint(1,50)
+            H = np.random.randint(1,10)
+            W = np.random.randint(1,10)
+            A = np.random.randint(1,10)
 
-            post_nms_top_n = np.random.randint(1,20000)
-            pre_nms_top_n = np.random.randint(1,2000)
+            dn = min(A*H*W/3, 2000)
+            up = max(A*H*W, 2000)
+            pre_nms_top_n = int(up)
+            post_nms_top_n = int(dn)
+
             nms_thresh = np.random.randint(1,100)/100
             min_size = np.random.randint(1,50)/100
             eta = 1.0
             pixel_offset = np.random.randint(0,10) > 5
 
-            param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
+            param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offse]
             cur_res += ',\n' + genSingleCase(params_list=param)
 
             if i % 2 == 0:
-                N = np.random.randint(1,5)
-                A = np.random.randint(1,100)
-                H = np.random.randint(1,50)
-                W = np.random.randint(1,50)
+                N = 1
+                H = np.random.randint(1,20)
+                W = np.random.randint(1,20)
+                A = np.random.randint(1,20)
 
-                post_nms_top_n = np.random.randint(1,20000)
-                pre_nms_top_n = np.random.randint(1,2000)
+                dn = min(A*H*W/3, 2000)
+                up = max(A*H*W, 2000)
+                pre_nms_top_n = int(up)
+                post_nms_top_n = int(dn)
+
                 nms_thresh = np.random.randint(1,100)/100
                 min_size = np.random.randint(1,50)/100
                 eta = 1.0
                 pixel_offset = np.random.randint(0,10) > 5
-                param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
+
+                param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offse]
                 cur_res += ',\n' + genSingleCase(params_list=param)
 
 
-            if i % 3 == 0:
-                N = np.random.randint(1,5)
-                A = np.random.randint(1,50)
-                H = np.random.randint(1,100)
-                W = np.random.randint(1,50)
+            # if i % 3 == 0:
+            #     N = np.random.randint(1,2)
+            #     A = np.random.randint(1,50)
+            #     H = np.random.randint(1,100)
+            #     W = np.random.randint(1,50)
 
-                post_nms_top_n = np.random.randint(1,20000)
-                pre_nms_top_n = np.random.randint(1,2000)
-                nms_thresh = np.random.randint(1,100)/100
-                min_size = np.random.randint(1,50)/100
-                eta = 1.0
-                pixel_offset = np.random.randint(0,10) > 5
-                param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
-                cur_res += ',\n' + genSingleCase(params_list=param)
+            #     post_nms_top_n = np.random.randint(1,20000)
+            #     pre_nms_top_n = np.random.randint(1,2000)
+            #     nms_thresh = np.random.randint(1,100)/100
+            #     min_size = np.random.randint(1,50)/100
+            #     eta = 1.0
+            #     pixel_offset = np.random.randint(0,10) > 5
+            #     param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
+            #     cur_res += ',\n' + genSingleCase(params_list=param)
 
                 
-            if i % 5 == 0:
-                N = np.random.randint(1,5)
-                A = np.random.randint(1,50)
-                H = np.random.randint(1,50)
-                W = np.random.randint(1,100)
+            # if i % 5 == 0:
+            #     N = np.random.randint(1,2)
+            #     A = np.random.randint(1,100)
+            #     H = np.random.randint(1,100)
+            #     W = np.random.randint(1,100)
 
-                post_nms_top_n = np.random.randint(1,20000)
-                pre_nms_top_n = np.random.randint(1,2000)
-                nms_thresh = np.random.randint(1,100)/100
-                min_size = np.random.randint(1,50)/100
-                eta = 1.0
-                pixel_offset = np.random.randint(0,10) > 5
-                param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
-                cur_res += ',\n' + genSingleCase(params_list=param)
+            #     post_nms_top_n = np.random.randint(1,20000)
+            #     pre_nms_top_n = np.random.randint(1,2000)
+            #     nms_thresh = np.random.randint(1,100)/100
+            #     min_size = np.random.randint(1,50)/100
+            #     eta = 1.0
+            #     pixel_offset = np.random.randint(0,10) > 5
+            #     param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
+            #     cur_res += ',\n' + genSingleCase(params_list=param)
 
     else:
         N = 1
@@ -176,72 +187,84 @@ def genCase():
         A = 15
         H = 48
         W = 48
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 42
         W = 56
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 40
         W = 61
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 44
         W = 59
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 59
         W = 44
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 42
         W = 64
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 15
         H = 48
         W = 64
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 3
         H = 50
         W = 68
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 3
         H = 160
         W = 216
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 3
         H = 50
         W = 76
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 3
         H = 160
         W = 248
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
 
         N = 1
         A = 3
         H = 176
         W = 240
+        param = [N, A, H ,W, post_nms_top_n, pre_nms_top_n, nms_thresh, min_size, eta, pixel_offset]
         cur_res += ',\n' + genSingleCase(params_list=param)
         # line 15
 

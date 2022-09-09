@@ -228,12 +228,12 @@ message DivParam {
 
 // param to call mluOpGenerateProposalsV2()
 message GenerateProposalsV2Param {
-  required int32 pre_nms_top_n = 1 [default = 6000];
-  required int32 post_nms_top_n = 2 [default = 2000];
-  required float nms_thresh = 3 [default = 0.5];
-  required float min_size = 4 [default = 0.1];
-  required float eta = 5 [default = 1.0];
-  required bool pixel_offset = 6 [default = true];
+  optional int32 pre_nms_top_n = 1 [default = 6000];
+  optional int32 post_nms_top_n = 2 [default = 2000];
+  optional float nms_thresh = 3 [default = 0.5];
+  optional float min_size = 4 [default = 0.1];
+  optional float eta = 5 [default = 1.0];
+  optional bool pixel_offset = 6 [default = true];
 }
 
 
